@@ -1,18 +1,17 @@
 {
-	"name": "lnwlf2121/eros",
-	"description": "The EROS Application for Nextcloud.",
-	"type": "nextcloud-app",
+	"name": "nextcloud/app_template",
+	"description": "An example description",
 	"license": "AGPL-3.0-or-later",
 	"authors": [
 		{
-			"name": "Phoenix Ash",
-			"email": "einzeln@gmail.com",
-			"homepage": "https://mtdews.com"
+			"name": "example",
+			"email": "example@example.com",
+			"homepage": "https://example.com"
 		}
 	],
 	"autoload": {
 		"psr-4": {
-			"OCA\\EROS\\": "lib/"
+			"OCA\\AppTemplate\\": "lib/"
 		}
 	},
 	"scripts": {
@@ -49,3 +48,4 @@
 		}
 	}
 }
+

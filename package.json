@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nextcloud/axios": "^2.5.0",
+    "npm": "^11.5.1",
     "vue": "^3.4.0"
   },
   "devDependencies": {

@@ -9,16 +9,15 @@ use OCP\IRequest;
 use OCP\Util;
 
 class PageController extends Controller {
-    public function __construct($AppName, IRequest $request) {
-        parent::__construct($AppName, $request);
+    public function __construct(string $appName, IRequest $request) {
+        parent::__construct($appName, $request);
     }
 
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function index(): TemplateResponse {
         Util::addScript('eros', 'eros-main');
-        Util::addStyle('eros', 'eros-main'); // Vite builds a single main.css
+        Util::addStyle('eros', 'main');
         return new TemplateResponse('eros', 'main');
     }
 }
-

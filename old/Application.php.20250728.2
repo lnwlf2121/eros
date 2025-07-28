@@ -9,11 +9,6 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\EROS\Controller\ErosController;
 use OCA\EROS\Controller\PageController;
-use OCP\IConfig;
-use OCP\Http\Client\IClientService;
-use OCP\ILogger;
-use OCP\IRequest;
-use Psr\Container\ContainerInterface;
 
 class Application extends App implements IBootstrap {
     public const APP_ID = 'eros';
@@ -23,21 +18,19 @@ class Application extends App implements IBootstrap {
     }
 
     public function register(IRegistrationContext $context): void {
-        // This is the updated, modern way to register services.
-        // It gets the main server container and requests services directly.
-        $context->registerService('PageController', function(ContainerInterface $c) {
+        // Register controllers as services
+        $context->registerService('PageController', function($c) {
             return new PageController(
                 $c->get('AppName'),
-                $c->get(IRequest::class)
+                $c->get('Request')
             );
         });
-        $context->registerService('ErosController', function(ContainerInterface $c) {
+        $context->registerService('ErosController', function($c) {
             return new ErosController(
                 $c->get('AppName'),
-                $c->get(IRequest::class),
-                $c->get(IConfig::class),
-                $c->get(IClientService::class),
-                $c->get(ILogger::class)
+                $c->get('Request'),
+                $c->get('config'),
+                $c->get('ClientService')
             );
         });
     }

@@ -1,26 +1,27 @@
 <?xml version="1.0"?>
-<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps.xsd">
     <id>eros</id>
     <name>EROS</name>
     <summary>A unified interface for a regenerative future.</summary>
     <description><![CDATA[The EROS application provides a "starship captain" style command console for interacting with AI and managing personal and planetary regeneration quests.]]></description>
     <version>1.0.0</version>
-    <licence>agpl</licence>
     <author mail="einzeln@gmail.com" homepage="https://mtdews.com">Phoenix Ash</author>
     <namespace>EROS</namespace>
     <category>tools</category>
-    <icon>app.svg</icon>
+    <icon>img/app.svg</icon>
     <dependencies>
-        <nextcloud min-version="29" max-version="32"/>
+        <nextcloud min-version="28" max-version="32"/>
     </dependencies>
-    <navigations>
-        <navigation>
-            <id>eros</id>
-            <name>EROS</name>
-            <route>eros.page.index</route>
-            <icon>app.svg</icon>
-            <type>link</type>
-        </navigation>
-    </navigations>
+
+    <!-- THIS IS THE CRITICAL, MISSING SECTION -->
+    <navigation>
+        <route>
+            <name>eros.page.index</name>
+            <route>/apps/eros/</route>
+            <icon>img/app.svg</icon>
+            <order>10</order>
+        </route>
+    </navigation>
+
 </info>

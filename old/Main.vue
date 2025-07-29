@@ -1,12 +1,21 @@
 <template>
   <div id="eros-app" class="h-full w-full bg-slate-900 text-cyan-200 flex flex-col font-mono">
+    <!-- Starship Background -->
     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 z-0"></div>
     <div class="absolute inset-0 bg-gradient-to-b from-slate-800/50 via-transparent to-slate-900 z-0"></div>
+
+    <!-- Header -->
     <header class="relative text-center p-4 border-b border-cyan-500/30 shadow-[0_4px_15px_-5px_rgba(0,255,255,0.2)]">
-        <h1 class="text-3xl font-bold text-cyan-300 tracking-widest uppercase">StarShip EROS</h1>
+        <h1 class="text-3xl font-bold text-cyan-300 tracking-widest uppercase">
+            StarShip EROS
+        </h1>
         <p class="text-sm text-cyan-400/70">Unified Command Interface</p>
     </header>
+
+    <!-- Main Console -->
     <main class="w-full h-full flex-grow flex flex-col md:flex-row gap-4 p-4 overflow-hidden">
+        
+        <!-- Left Panel: Systems & Quests -->
         <div class="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-4">
             <div class="bg-black/30 p-4 rounded-md border border-cyan-500/30 h-1/2 flex flex-col">
                 <h2 class="text-lg font-bold text-cyan-300 uppercase mb-3">System Status</h2>
@@ -26,8 +35,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- Right Panel: Command Log & Input -->
         <div class="w-full md:w-2/3 lg:w-3/4 flex flex-col bg-black/30 rounded-md border border-cyan-500/30">
             <div id="transcript-log" class="flex-grow p-4 space-y-4 overflow-y-auto">
+                <!-- Transcript Messages Rendered Here -->
                 <div v-for="message in transcript" :key="message.id">
                     <div v-if="message.author === 'Captain'" class="text-right">
                         <p class="text-sm text-cyan-300">> {{ message.text }}</p>
@@ -51,15 +63,19 @@
     </main>
   </div>
 </template>
+
 <script>
 import axios from '@nextcloud/axios'
+
 export default {
   name: 'Main',
   data() {
     return {
       newMessage: '',
       isLoading: false,
-      transcript: [ { id: 1, author: 'ORACLE', text: "Bridge is online. Awaiting command, Captain." } ]
+      transcript: [
+          { id: 1, author: 'ORACLE', text: "Bridge is online. Awaiting command, Captain." },
+      ]
     }
   },
   methods: {
@@ -89,3 +105,8 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* All styling is now handled by Tailwind CSS in the template */
+</style>
+

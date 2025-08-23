@@ -16,7 +16,7 @@
     "@nextcloud/browserslist-config": "^3.0.0",
     "@nextcloud/vite-config": "^2.0.0",
     "@vitejs/plugin-vue": "^5.0.0",
-    "@vue/tsconfig": "^0.5.0",
+    "@vue/tsconfig": "^0.8.1",
     "vite": "^5.2.0"
   }
 }

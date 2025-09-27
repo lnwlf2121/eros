@@ -9,7 +9,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@nextcloud/axios": "^2.5.0",
+    "@nextcloud/axios": "^2.5.2",
     "vue": "^3.4.0"
   },
   "devDependencies": {

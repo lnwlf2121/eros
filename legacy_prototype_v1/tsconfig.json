@@ -1,0 +1,9 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.json",
+  "include": [ "src/**/*" ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": [ "src/*" ] }
+  },
+  "references": [ { "path": "./tsconfig.node.json" } ]
+}

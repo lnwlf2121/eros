@@ -1,0 +1,12 @@
+====================================================
+  E R O S  D Y N A M I C S  |  K E R B T A P  L A B
+====================================================
+[Node A] C-Native Screamer -> UDP/FIFO Pipeline
+[Node C] RAM-Isolated Shield -> NNTP/DePIN Uplink
+[Node B] Sovereign Consumer -> Local Decryption
+====================================================
+Commands:
+- 'mc' : Midnight Commander
+- 'tmux' : Split terminals (Ctrl+B then ")
+- 'python3 kerbtap_daemon.py' : Start Engine
+====================================================

@@ -38,50 +38,50 @@ class KerbtapTUI(App):
         yield Log(id="console_log")
         yield Footer()
 
-# my suggestion...
-#   def on_ready(self) -> None:
-#        # Minted ONCE at boot. Never recalculated.
-#        self.static_target_hash = get_64bit_target() 
-#        
-#        self.log_stream = self.query_one("#console_log", Log)
-#        self.log_stream.write_line(f"==========================================")
-#        self.log_stream.write_line(f"[SYSTEM] EROS Node C Engine Online.")
-#        self.log_stream.write_line(f"[SYSTEM] Static Target Hash Locked: comp.os.eros.vfs.{self.static_target_hash}")
-##        self.log_stream.write_line(f"==========================================")
-#        
-#        self.set_interval(0.5, self.process_pipeline)
-
     def on_ready(self) -> None:
+        self.static_target_hash = get_64bit_target() 
+        
         self.log_stream = self.query_one("#console_log", Log)
         self.log_stream.write_line(f"==========================================")
         self.log_stream.write_line(f"[SYSTEM] EROS Node C Engine Online.")
-        self.log_stream.write_line(f"[SYSTEM] Target Hash: comp.os.eros.vfs.{get_64bit_target()}")
+        self.log_stream.write_line(f"[SYSTEM] Target Hash: comp.os.eros.vfs.{self.static_target_hash}")
         self.log_stream.write_line(f"==========================================")
-        # Poll the pipe every 0.5s asynchronously
+        
+        # FIX: Open the pipe persistently so the Screamer always sees an active reader
+        self.persistent_fd = os.open(FIFO_PATH, os.O_RDONLY | os.O_NONBLOCK)
+        
         self.set_interval(0.5, self.process_pipeline)
 
     def process_and_shield(self, data_payload):
-        """Executes the FAST RAM-to-RAM compression and PAR2 generation"""
+        """Executes FAST RAM-to-RAM Gzip compression, Splitting, and PAR2 generation"""
         start_time = time.time()
-        
+
+        # 1. Write the raw entropy to the RAM-disk
         payload_file = f"{SPOOL_DIR}/raw_payload.dat"
         with open(payload_file, 'wb') as f:
             f.write(data_payload)
-            
-        self.log_stream.write_line("[MATRIX SHIELD] Slicing data via RAR with FAST (-m1) compression...")
-        subprocess.run(["rar", "a", "-m1", f"{SPOOL_DIR}/mosaic.rar", payload_file], capture_output=True)
-        
-        self.log_stream.write_line("[MATRIX SHIELD] Generating 10% PAR2 Forward Error Correction...")
-        subprocess.run(["par2", "c", "-r10", f"{SPOOL_DIR}/mosaic.rar.par2", f"{SPOOL_DIR}/mosaic.rar"], capture_output=True)
-        
+
+        # 2. Compress using GZIP (-1 means fastest RAM-to-RAM compression)
+        self.log_stream.write_line("[MATRIX SHIELD] Zipping data via native Gzip...")
+        subprocess.run(["gzip", "-f", "-1", payload_file], capture_output=True)
+
+        # 3. Slice the zipped file into uniform chunks for NNTP using Linux 'split'
+        # -b 500K slices it into 500 Kilobyte pieces named mosaic_chunk_aa, ab, etc.
+        self.log_stream.write_line("[MATRIX SHIELD] Slicing payload for legacy NNTP transport...")
+        zipped_file = f"{payload_file}.gz"
+        subprocess.run(["split", "-b", "500K", zipped_file, f"{SPOOL_DIR}/mosaic_chunk_"], capture_output=True)
+
+        # 4. Generate the 10% Forward Error Correction Shield
+        self.log_stream.write_line("[MATRIX SHIELD] Generating 10% PAR2 Parity Shield...")
+        subprocess.run(["par2", "c", "-r10", f"{SPOOL_DIR}/mosaic.par2", f"{SPOOL_DIR}/mosaic_chunk_*"], capture_output=True)
+
+        # Calculate how long the CPU worked so we can absorb it into the 3-6-9 skid plate wait time
         return time.time() - start_time
 
     def process_pipeline(self) -> None:
         try:
-            # 2. Aggressive Non-Blocking Read: Drops excess to floor if choking
-            fd = os.open(FIFO_PATH, os.O_RDONLY | os.O_NONBLOCK)
-            data = os.read(fd, 1048576) # Rip up to 1MB from the buffer
-            os.close(fd)
+            # FIX: Read directly from the persistent connection. No opening or closing here!
+            data = os.read(self.persistent_fd, 1048576) 
 
             if data:
                 self.log_stream.write_line(f"\n[NODE C] Harvested {len(data)} bytes of sensor entropy.")
@@ -95,8 +95,6 @@ class KerbtapTUI(App):
                 
                 self.log_stream.write_line(f"[SKID PLATE] CPU compression took {proc_time:.2f}s.")
                 self.log_stream.write_line(f"[SKID PLATE] Masking signature. Delaying {sleep_time:.2f}s...")
-                
-                # In real network logic, the async thread awaits sleep_time before socket push
                 self.log_stream.write_line(f"[UPLINK] Pushing shielded payload to NNTP/DePIN Stargate.\n")
                 
         except BlockingIOError:

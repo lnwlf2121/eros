@@ -4,12 +4,14 @@ FROM python:3.10-slim
 RUN apt-get update && apt-get install -y \
     tmux \
     mc \
+    libcom-err2 \
+    libcom-dev \
     vim \
     nano \
     netcat-traditional \
+    make \
     gcc \
-    rar \
-    par2cmdline \
+    par2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up the RAM-disk simulation folders
@@ -21,7 +23,7 @@ RUN echo "syntax on\nset tabstop=4\nset expandtab\nset shiftwidth=4\nset autoind
 
 # Install python requirements via the setup.py we will mount
 # (Will be executed at runtime or you can run `pip install -e .` inside)
-RUN pip install --no-cache-dir textual python-dotenv
+RUN pip install --no-cache-dir textual python-dotenv Nuitka
 
 # Copy entrypoint and Welcome Message
 COPY motd /etc/motd

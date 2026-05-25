@@ -1,0 +1,13 @@
+#!/bin/bash
+# /sbin/mount.nntp - Helper for the EROS Node B FUSE Engine
+
+# Extract the target group (e.g., nntp://comp.os.eros.hash) and mountpoint
+SOURCE=$1
+MOUNTPOINT=$2
+
+# Shift the arguments to capture the -o options
+shift 2
+
+# Execute the python FUSE engine (bail if there are no arguments
+[[ $@ = "" ]] && die "Usage: mount -t nntp -o=now-2days nttp://comp.os.eros.hash </mountpoint>" || \
+exec python3 /usr/local/bin/nntpfuse.py "$SOURCE" "$MOUNTPOINT" "$@"

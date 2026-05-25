@@ -11,6 +11,12 @@ from textual.widgets import Header, Footer, Log
 load_dotenv()
 DEVICE_ID = os.getenv("DEVICE_ID", "Earthship_Node_01")
 SECRET_SALT = os.getenv("SECRET_SALT", "eros_master_key")
+TRANSPORT_MODE = os.getenv("TRANSPORT_MODE", "LOCAL_DEV").upper()
+
+NNTP_SERVER = os.getenv("NNTP_SERVER","")
+NNTP_USER = os.getenv("NNTP_USER","")
+NNTP_PASS = os.getenv("NNTP_PASS","")
+
 BASE_RHYTHM = float(os.getenv("BASE_RHYTHM", 3.0))
 
 FIFO_PATH = '/tmp/eros_sensor_pipe'
@@ -25,6 +31,13 @@ def get_64bit_target():
     """Generates the secure legacy NNTP/DePIN group routing hash"""
     raw_string = f"{DEVICE_ID}_{SECRET_SALT}".encode('utf-8')
     return hashlib.sha256(raw_string).hexdigest()[:16]
+
+def cleanup_spool(self):
+    """Purges the RAM-disk after successful transmission"""
+    for filename in os.listdir(SPOOL_DIR):
+        filepath = os.path.join(SPOOL_DIR, filename)
+        if os.path.isfile(filepath):
+            os.remove(filepath)
 
 class KerbtapTUI(App):
     CSS = """
@@ -77,6 +90,51 @@ class KerbtapTUI(App):
 
         # Calculate how long the CPU worked so we can absorb it into the 3-6-9 skid plate wait time
         return time.time() - start_time
+    
+    def post_to_local(self, target_hash):
+        """Simulates the network drop for local developmetn"""
+        self.log_stream.write_line(f"[UPLINK] LOCAL_DEV mode active Routing into internal void...")
+        # In a real dev test, you might move this to a permanent folder to inspect the gz/par2 files.
+        # For now, we just purge it to simulate a successful send.
+        self.cleanup_spool()
+        self.log_stream.write_line("[SYSTEM] Local Dev transmission complete. RAM spool cleared.")
+    
+    def post_to_nntp(self, target_hash):
+        """Pushes the shielded payload to the legacy NNTP Stargate"""
+        group_name = f"comp.os.eros.vfs.{target_hash}"
+        try:
+            server = nntplib.NNTP(NNTP_SERVER, user=NNTP_USER, password=NNTP_PASS)
+            for filename in os.listdir(SPOOL_DIR):
+                filepath = os.path.join(SPOOL_DIR, filename)
+                if os.path.isfile(filepath):
+                    with open(filepath, "rb") as f:
+                        encoded_payload = base64.b64encode(f.read()).decode('utf-8')
+
+                    msg = Message()
+                    msg['From'] = f"node_c@{DEVICE_ID}.eros"
+                    msg['Newsgroups'] = group_name
+                    msg['Subject'] = f"EROS_METRIC_BLOCK [{filename}]"
+                    msg.set_payload(encoded_payload)
+
+                    self.log_stream.write_line(f"[UPLINK] Transmitting {filename} to NNTP...")
+                    server.post(msg.as_bytes())
+
+            server.quit()
+            self.cleanup_spool()
+            self.log_stream.write_line("[SYSTEM] NNTP transmission complete. RAM spool cleared.")
+        except Exception as e:
+            self.log_stream.write_line(f"[ERROR] NNTP Stargate failure: {e}")
+
+    def post_to_depin(self, target_hash):
+        """The future DePIN / IPFS PubSub mesh broadcast"""
+        self.log_stream.write_line(f"[UPLINK] DEPIN mode active. Initiating IPFS PubSub handshake...")
+        self.log_stream.write_line(f"[UPLINK] Broadcasting to sovereign mesh topic: {target_hash}")
+        
+        # Dummy delay to simulate the peer-to-peer network broadcast
+        time.sleep(1) 
+        
+        self.cleanup_spool()
+        self.log_stream.write_line("[SYSTEM] DePIN transmission complete. RAM spool cleared.")
 
     def process_pipeline(self) -> None:
         try:
@@ -95,7 +153,19 @@ class KerbtapTUI(App):
                 
                 self.log_stream.write_line(f"[SKID PLATE] CPU compression took {proc_time:.2f}s.")
                 self.log_stream.write_line(f"[SKID PLATE] Masking signature. Delaying {sleep_time:.2f}s...")
-                self.log_stream.write_line(f"[UPLINK] Pushing shielded payload to NNTP/DePIN Stargate.\n")
+                #self.log_stream.write_line(f"[UPLINK] Pushing shielded payload to NNTP/DePIN Stargate.\n")
+                time.sleep(sleep_time)
+
+                # 5. The Switchboard (Routing based on .env)
+                if TRANSPORT_MODE == "NNTP":
+                    self.post_to_nntp(self.static_target_hash)
+                elif TRANSPORT_MODE == "DEPIN":
+                    self.post_to_depin(self.static_target_hash)
+                else:
+                    self.post_to_local(self.static_target_hash)
+
+                self.log_stream.write_line(f"[SYSTEM] Pipeline ready for next burst.\n")
+
                 
         except BlockingIOError:
             pass # No data in pipe, sleep silently

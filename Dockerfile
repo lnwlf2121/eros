@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up the RAM-disk simulation folders
-RUN mkdir -p /tmp/kerbtap-spool /root/workspace
+RUN mkdir -p /tmp/kerbtap-spool /tmp/nntpfusemount /root/workspace
 WORKDIR /root/workspace
 
 # Configure Vim for Python Development
@@ -23,11 +23,13 @@ RUN echo "syntax on\nset tabstop=4\nset expandtab\nset shiftwidth=4\nset autoind
 
 # Install python requirements via the setup.py we will mount
 # (Will be executed at runtime or you can run `pip install -e .` inside)
-RUN pip install --no-cache-dir textual python-dotenv Nuitka
+RUN pip install --no-cache-dir textual python-dotenv Nuitka dateparser
 
 # Copy entrypoint and Welcome Message
-COPY motd /etc/motd
+COPY motd /etc/
+COPY mount.nntp /sbin/
+COPY nntpfuse.py /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /sbin/mount.nntp
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
